@@ -23,10 +23,10 @@ namespace racshell
     {
         argparse::ArgumentParser program(spec.command_name);
 
-        program.add_argument("keyring")
-            .help("keyring name");
         program.add_argument("owner")
             .help("owner userid");
+        program.add_argument("keyring")
+            .help("keyring name");
 
         add_no_color_argument(program);
         add_toggle_argument(program, "-d", "--debug", "debug sear request and response");
@@ -46,17 +46,17 @@ namespace racshell
 
         set_color_output_enabled(!program.get<bool>("no-color"));
 
-        const std::string keyring = program.get<std::string>("keyring");
-        if (keyring.empty() || keyring.length() > 238)
-        {
-            print_error(std::cerr, "Invalid input, keyring name must be between 1 and 238 characters");
-            return 1;
-        }
-
         const std::string owner = program.get<std::string>("owner");
         if (owner.empty() || owner.length() > 8)
         {
             print_error(std::cerr, "Invalid input, owner userid must be between 1 and 8 characters");
+            return 1;
+        }
+
+        const std::string keyring = program.get<std::string>("keyring");
+        if (keyring.empty() || keyring.length() > 238)
+        {
+            print_error(std::cerr, "Invalid input, keyring name must be between 1 and 238 characters");
             return 1;
         }
 
@@ -91,16 +91,16 @@ namespace racshell
 
         if (json_output)
         {
-            nlohmann::json output = {
-                {"keyring", keyring},
+            nlohmann::ordered_json output = {
                 {"owner", owner},
+                {"keyring", keyring},
                 {"status", spec.success_verb}};
             std::cout << output.dump(2) << "\n";
         }
         else
         {
             print_success_prefix(std::cout);
-            std::cout << "Keyring " << keyring << " owned by " << owner << " "
+            std::cout << "Owner " << owner << " keyring " << keyring << " "
                       << spec.success_verb << " successfully.\n";
         }
         return 0;

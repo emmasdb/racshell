@@ -602,7 +602,7 @@ Create a RACF keyring.
 
 Usage:
 
-`addkeyring <keyring> <owner> [options]`
+`addkeyring <owner> <keyring> [options]`
 
 ### deletekeyring
 
@@ -610,7 +610,7 @@ Delete a RACF keyring.
 
 Usage:
 
-`deletekeyring <keyring> <owner> [options]`
+`deletekeyring <owner> <keyring> [options]`
 
 ### listkeyring
 
@@ -618,7 +618,7 @@ Extract keyring details, including associated certificates.
 
 Usage:
 
-`listkeyring <keyring> <owner> [options]`
+`listkeyring <owner> <keyring> [options]`
 
 All keyring commands support `-n, --no-color`, `-d, --debug`, `-j, --json`, and `-a, --all-json`.
 

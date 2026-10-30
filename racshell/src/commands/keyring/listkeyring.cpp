@@ -5,14 +5,59 @@
 #include "include/racshell/command_helper.hpp"
 #include "sear/sear.h"
 
+namespace
+{
+    std::string display_value(const nlohmann::json &value)
+    {
+        return value.is_string() ? value.get<std::string>() : value.dump();
+    }
+
+    void print_readable_value(const nlohmann::json &value, std::size_t indent)
+    {
+        const std::string padding(indent, ' ');
+        if (value.is_object())
+        {
+            for (auto it = value.begin(); it != value.end(); ++it)
+            {
+                std::cout << padding << it.key();
+                if (it.value().is_structured())
+                {
+                    std::cout << ":\n";
+                    print_readable_value(it.value(), indent + 2);
+                }
+                else
+                {
+                    std::cout << ": " << display_value(it.value()) << "\n";
+                }
+            }
+        }
+        else if (value.is_array())
+        {
+            for (const auto &item : value)
+            {
+                std::cout << padding << "-";
+                if (item.is_structured())
+                {
+                    std::cout << "\n";
+                    print_readable_value(item, indent + 2);
+                }
+                else
+                {
+                    std::cout << " " << display_value(item) << "\n";
+                }
+            }
+        }
+    }
+}
+
 int main(int argc, char *argv[])
 {
     argparse::ArgumentParser program("listkeyring");
 
-    program.add_argument("keyring")
-        .help("keyring name");
     program.add_argument("owner")
         .help("owner userid");
+    program.add_argument("keyring")
+        .help("keyring name");
 
     racshell::add_no_color_argument(program);
     racshell::add_toggle_argument(program, "-d", "--debug", "debug sear request and response");
@@ -32,17 +77,17 @@ int main(int argc, char *argv[])
 
     racshell::set_color_output_enabled(!program.get<bool>("no-color"));
 
-    const std::string keyring = program.get<std::string>("keyring");
-    if (keyring.empty() || keyring.length() > 238)
-    {
-        racshell::print_error(std::cerr, "Invalid input, keyring name must be between 1 and 238 characters");
-        return 1;
-    }
-
     const std::string owner = program.get<std::string>("owner");
     if (owner.empty() || owner.length() > 8)
     {
         racshell::print_error(std::cerr, "Invalid input, owner userid must be between 1 and 8 characters");
+        return 1;
+    }
+
+    const std::string keyring = program.get<std::string>("keyring");
+    if (keyring.empty() || keyring.length() > 238)
+    {
+        racshell::print_error(std::cerr, "Invalid input, keyring name must be between 1 and 238 characters");
         return 1;
     }
 
@@ -84,16 +129,31 @@ int main(int argc, char *argv[])
 
     if (json_output)
     {
-        nlohmann::json output = {
-            {"keyring", keyring},
+        nlohmann::ordered_json output = {
             {"owner", owner},
+            {"keyring", keyring},
             {"details", *keyring_data}};
         std::cout << output.dump(2) << "\n";
     }
     else
     {
-        std::cout << "Keyring " << keyring << " owned by " << owner << ":\n";
-        std::cout << keyring_data->dump(2) << "\n";
+        std::cout << "Owner: " << owner << "\n";
+        std::cout << "Keyring: " << keyring << "\n";
+
+        const auto certificates = keyring_data->find("certificates");
+        if (certificates == keyring_data->end() || !certificates->is_array() || certificates->empty())
+        {
+            std::cout << "Certificates: none\n";
+        }
+        else
+        {
+            std::cout << "Certificates: " << certificates->size() << "\n";
+            for (std::size_t index = 0; index < certificates->size(); ++index)
+            {
+                std::cout << "  Certificate " << index + 1 << ":\n";
+                print_readable_value((*certificates)[index], 4);
+            }
+        }
     }
     return 0;
 }
