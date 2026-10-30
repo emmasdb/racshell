@@ -249,10 +249,9 @@ std::string TextFormatter::format(const UserData &user)
 
     if (!user.security.is_null() && !user.security.empty())
     {
-        ss << "Security:\n";
         for (auto it = user.security.begin(); it != user.security.end(); ++it)
         {
-            ss << "  " << format_security_key(it.key()) << ": ";
+            ss << format_security_key(it.key()) << ": ";
             append_json_value(ss, it.value());
             ss << "\n";
         }
