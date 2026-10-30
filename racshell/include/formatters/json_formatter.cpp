@@ -40,7 +40,9 @@ std::string JsonFormatter::format(const UserData &user)
     output["created_date"] = user.created_date;
     output["last_access_date"] = user.last_access_date;
     output["last_access_time"] = user.last_access_time;
+    output["revoke_date"] = user.revoke_date;
     output["protected"] = user.protected_user;
+    output["restrict_global_access_checking"] = user.restrict_global_access_checking;
     output["special"] = user.special;
     output["operations"] = user.operations;
     output["auditor"] = user.auditor;

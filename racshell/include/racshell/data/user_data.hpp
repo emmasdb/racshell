@@ -15,7 +15,9 @@ struct UserData
     std::string created_date;
     std::string last_access_date;
     std::string last_access_time;
+    std::string revoke_date;
     bool protected_user = false;
+    bool restrict_global_access_checking = false;
     bool special = false;
     bool operations = false;
     bool auditor = false;

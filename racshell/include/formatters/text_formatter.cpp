@@ -172,6 +172,9 @@ std::string TextFormatter::format(const UserData &user)
     ss << "Protected: ";
     append_boolean(ss, user.protected_user);
     ss << "\n";
+    ss << "Restricted: ";
+    append_boolean(ss, user.restrict_global_access_checking);
+    ss << "\n";
     ss << "Special: ";
     append_boolean(ss, user.special);
     ss << "\n";
@@ -187,6 +190,10 @@ std::string TextFormatter::format(const UserData &user)
     ss << "Revoked: ";
     append_boolean(ss, user.revoked);
     ss << "\n";
+    if (!user.revoke_date.empty())
+    {
+        ss << "Revoke date: " << user.revoke_date << "\n";
+    }
     ss << "Password expired: ";
     append_boolean(ss, user.password_expired);
     ss << "\n";
