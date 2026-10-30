@@ -4,6 +4,7 @@
 #include <array>
 #include <cctype>
 #include <sstream>
+#include <string_view>
 
 namespace
 {
@@ -32,11 +33,24 @@ namespace
         return key;
     }
 
+    void append_segment_label(std::stringstream &ss, std::string_view segment)
+    {
+        ss << "\n";
+        racshell::print_colored_text(ss, racshell::terminal_color::cyan, segment);
+        ss << ":";
+    }
+
+    void append_segment_heading(std::stringstream &ss, std::string_view segment)
+    {
+        append_segment_label(ss, segment);
+        ss << "\n";
+    }
+
     void append_csdata(std::stringstream &ss, const nlohmann::json &csdata)
     {
         if (!csdata.is_null() && !csdata.empty())
         {
-            ss << "CSDATA:\n";
+            append_segment_heading(ss, "CSDATA");
             for (auto it = csdata.begin(); it != csdata.end(); ++it)
             {
                 ss << "  " << format_security_key(it.key()) << ": ";
@@ -96,7 +110,9 @@ namespace
                                  const std::string &label)
     {
         ss << "  ";
-        racshell::colorize(ss, racshell::terminal_color::gray) << label;
+        const bool segment_label = label == "tso" || label == "kerberos" ||
+                       label == "cics" || label == "omvs" || label == "csdata";
+        racshell::colorize(ss, segment_label ? racshell::terminal_color::cyan : racshell::terminal_color::gray) << label;
         racshell::reset_color(ss) << ": ";
 
         racshell::colorize(ss, racshell::terminal_color::magenta) << left_groupid;
@@ -159,7 +175,7 @@ std::string TextFormatter::format(const UserData &user)
 
     if (!user.tso.is_null() && !user.tso.empty())
     {
-        ss << "TSO:\n";
+        append_segment_heading(ss, "TSO");
         if (user.tso.contains("tso:logon_procedure"))
             ss << "  Procedure:    " << user.tso["tso:logon_procedure"].get<std::string>() << "\n";
         if (user.tso.contains("tso:account_number"))
@@ -178,7 +194,7 @@ std::string TextFormatter::format(const UserData &user)
 
     if (!user.omvs.is_null() && !user.omvs.empty())
     {
-        ss << "OMVS:\n";
+        append_segment_heading(ss, "OMVS");
         if (user.omvs.contains("omvs:uid"))
             ss << "  UID:   " << user.omvs["omvs:uid"] << "\n";
         if (user.omvs.contains("omvs:home_directory"))
@@ -189,12 +205,14 @@ std::string TextFormatter::format(const UserData &user)
 
     if (!user.kerberos.is_null() && !user.kerberos.empty())
     {
-        ss << "Kerberos: " << user.kerberos.dump() << "\n";
+        append_segment_label(ss, "Kerberos");
+        ss << " " << user.kerberos.dump() << "\n";
     }
 
     if (!user.cics.is_null() && !user.cics.empty())
     {
-        ss << "CICS: " << user.cics.dump() << "\n";
+        append_segment_label(ss, "CICS");
+        ss << " " << user.cics.dump() << "\n";
     }
 
     append_csdata(ss, user.csdata);
@@ -229,7 +247,7 @@ std::string TextFormatter::format(const GroupData &group)
 
     if (!group.omvs.is_null() && !group.omvs.empty())
     {
-        ss << "OMVS:\n";
+        append_segment_heading(ss, "OMVS");
         if (group.omvs.contains("omvs:gid"))
         {
             ss << "  GID: " << group.omvs["omvs:gid"] << "\n";

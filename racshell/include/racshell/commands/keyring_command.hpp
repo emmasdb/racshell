@@ -99,9 +99,8 @@ namespace racshell
         }
         else
         {
-            print_success_prefix(std::cout);
-            std::cout << "Owner " << owner << " keyring " << keyring << " "
-                      << spec.success_verb << " successfully.\n";
+            print_operation_success(std::cout, spec.operation,
+                                    "Owner " + owner + " keyring " + keyring + " " + spec.success_verb + " successfully.");
         }
         return 0;
     }

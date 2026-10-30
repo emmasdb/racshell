@@ -248,6 +248,20 @@ namespace racshell
         reset_color(output) << ": ";
     }
 
+    inline void print_operation_success(std::ostream &output,
+                                        std::string_view operation,
+                                        const std::string &message)
+    {
+        if (operation == "add")
+        {
+            print_colored_text(output, terminal_color::green, message) << "\n";
+            return;
+        }
+
+        print_success_prefix(output);
+        output << message << "\n";
+    }
+
     /**
      * @brief Adds a conventional boolean toggle argument to an argparse program.
      * @param program Target argument parser.

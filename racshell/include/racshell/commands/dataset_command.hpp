@@ -147,9 +147,8 @@ inline int run_dataset_command(
     }
     else
     {
-        print_success_prefix(std::cout);
-
-        std::cout << spec.success_label << " " << dataset << " " << spec.success_verb << " successfully.\n";
+        print_operation_success(std::cout, spec.operation,
+                                std::string(spec.success_label) + " " + dataset + " " + spec.success_verb + " successfully.");
     }
     return 0;
 }

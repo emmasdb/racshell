@@ -130,8 +130,8 @@ namespace racshell
         }
         else
         {
-            print_success_prefix(std::cout);
-            std::cout << spec.success_label << " " << display_entity_value << " " << spec.success_verb << " successfully.\n";
+            print_operation_success(std::cout, spec.operation,
+                                    std::string(spec.success_label) + " " + display_entity_value + " " + spec.success_verb + " successfully.");
         }
         return 0;
     }

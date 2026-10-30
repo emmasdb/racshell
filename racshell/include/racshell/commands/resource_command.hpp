@@ -125,8 +125,8 @@ namespace racshell
         }
         else
         {
-            print_success_prefix(std::cout);
-            std::cout << spec.success_label << " " << resource << " " << spec.success_verb << " successfully in class " << resource_class << ".\n";
+            print_operation_success(std::cout, spec.operation,
+                                    std::string(spec.success_label) + " " + resource + " " + spec.success_verb + " successfully in class " + resource_class + ".");
         }
         return 0;
     }
