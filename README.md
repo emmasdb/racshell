@@ -46,6 +46,9 @@ The following commands are currently implemented in `racshell/`.
 | `permitresource` | Permit | Grant access to resource profile | `--traits`, `--json`, `--debug`, `--all-json`, `--no-color` |
 | `deletepermitdataset` | Permit | Revoke access to dataset profile | `--generic`, `--json`, `--debug`, `--all-json`, `--no-color` |
 | `deletepermitresource` | Permit | Revoke access to resource profile | `--json`, `--debug`, `--all-json`, `--no-color` |
+| `addkeyring` | Keyring | Create a RACF keyring | `--json`, `--debug`, `--all-json`, `--no-color` |
+| `deletekeyring` | Keyring | Delete a RACF keyring | `--json`, `--debug`, `--all-json`, `--no-color` |
+| `listkeyring` | Keyring | Display keyring and certificate details | `--json`, `--debug`, `--all-json`, `--no-color` |
 
 ## User Commands
 
@@ -588,6 +591,36 @@ Options:
 - `-d, --debug` debug SEAR request and response
 - `-j, --json` output as JSON
 - `-a, --all-json` output full raw SEAR JSON response
+
+## Keyring Commands
+
+Keyring administration and lookup commands. Each command requires both the keyring name and owner userid.
+
+### addkeyring
+
+Create a RACF keyring.
+
+Usage:
+
+`addkeyring <keyring> <owner> [options]`
+
+### deletekeyring
+
+Delete a RACF keyring.
+
+Usage:
+
+`deletekeyring <keyring> <owner> [options]`
+
+### listkeyring
+
+Extract keyring details, including associated certificates.
+
+Usage:
+
+`listkeyring <keyring> <owner> [options]`
+
+All keyring commands support `-n, --no-color`, `-d, --debug`, `-j, --json`, and `-a, --all-json`.
 
 ## Build pre-reqs
 

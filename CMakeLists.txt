@@ -137,6 +137,16 @@ target_link_libraries(permitresource racshell -static)
 add_executable(deletepermitresource "racshell/src/commands/resource/deletepermitresource.cpp")
 target_link_libraries(deletepermitresource racshell -static)
 
+# Keyring commands
+add_executable(addkeyring "racshell/src/commands/keyring/addkeyring.cpp")
+target_link_libraries(addkeyring racshell -static)
+
+add_executable(deletekeyring "racshell/src/commands/keyring/deletekeyring.cpp")
+target_link_libraries(deletekeyring racshell -static)
+
+add_executable(listkeyring "racshell/src/commands/keyring/listkeyring.cpp")
+target_link_libraries(listkeyring racshell -static)
+
 add_custom_target(
     racshell_commands
     DEPENDS
@@ -171,4 +181,7 @@ add_custom_target(
     permitresource
     deletepermitdataset
     deletepermitresource
+    addkeyring
+    deletekeyring
+    listkeyring
 )
