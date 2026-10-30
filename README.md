@@ -4,7 +4,7 @@ Open source RACF shell interface intended for z/OS Unix SSH sessions. Built with
 
 ## Permissions
 
-To use RACSHELL you will need access to one or more of the accesses documented in the [SEAR documentation](https://mainframe-renewal-project.github.io/sear-docs/authorizations/), depending on the commands you intend to execute. You will also need access to group special, system special, read-only auditor, or FIELD class profiles in addition to the IRRSEQ00, IRRSDL64, and IRRSMO00 API accesses. Whether you can make do with something like group/system special or group/system auditor depends on whether or not you need to change or list things in RACF.
+To use RACSHELL you will need access to one or more of the RACF profiles documented in the [SEAR documentation](https://mainframe-renewal-project.github.io/sear-docs/authorizations/), depending on the commands you intend to execute. You will also need access to group special, system special, read-only auditor, or FIELD class profiles in addition to the IRRSEQ00, IRRSDL64, and IRRSMO00 API accesses. Whether you can make do with something like group/system special or group/system auditor depends on whether or not you need to change or list things in RACF.
 
 ## Commands
 
