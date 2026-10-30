@@ -25,7 +25,6 @@ int main(int argc, char *argv[])
     racshell::add_toggle_argument(program, "-k", "--kerberos", "list kerberos segment");
     racshell::add_toggle_argument(program, "-c", "--cics", "list CICS segment");
     racshell::add_toggle_argument(program, "-o", "--omvs", "list OMVS segment");
-    racshell::add_toggle_argument(program, "-s", "--security", "list security-related fields");
     racshell::add_toggle_argument(program, "-x", "--csdata", "list CSDATA segment");
     racshell::add_no_color_argument(program);
     racshell::add_toggle_argument(program, "-d", "--debug", "debug sear request and response");
@@ -62,7 +61,6 @@ int main(int argc, char *argv[])
         bool kerberos = program.get<bool>("kerberos");
         bool cics = program.get<bool>("cics");
         bool omvs = program.get<bool>("omvs");
-        bool security = program.get<bool>("security");
         bool json_output = program.get<bool>("json");
         bool all_json = program.get<bool>("all-json");
         
@@ -114,41 +112,27 @@ int main(int argc, char *argv[])
         racshell::assign_bool(base, "base:has_password", user_data.has_password);
         racshell::assign_bool(base, "base:mfa_active", user_data.mfa_active);
 
-        if (security)
+        user_data.security = nlohmann::json::object();
+
+        const std::vector<std::string> base_security_keys = {
+            "base:resume_date",
+            "base:password_change_date",
+            "base:password_change_interval",
+            "base:passphrase_change_date",
+            "base:passphrase_change_interval"};
+
+        for (const auto &key : base_security_keys)
         {
-            user_data.security = nlohmann::json::object();
-
-            const std::vector<std::string> base_security_keys = {
-                "base:resume_date",
-                "base:password_change_date",
-                "base:password_change_interval",
-                "base:password_expired",
-                "base:passphrase_change_date",
-                "base:passphrase_change_interval",
-                "base:has_passphrase",
-                "base:has_password",
-                "base:special",
-                "base:operations",
-                "base:auditor",
-                "base:read_only_auditor",
-                "base:protected",
-                "base:restrict_global_access_checking",
-                "base:last_access_date",
-                "base:installation_data"};
-
-            for (const auto &key : base_security_keys)
+            const auto element = base.find(key);
+            if (element != base.end())
             {
-                const auto element = base.find(key);
-                if (element != base.end())
-                {
-                    user_data.security[key] = *element;
-                }
+                user_data.security[key] = *element;
             }
+        }
 
-            if (profile.contains("mfa"))
-            {
-                user_data.security["mfa"] = profile["mfa"];
-            }
+        if (profile.contains("mfa"))
+        {
+            user_data.security["mfa"] = profile["mfa"];
         }
 
         if (groups && base.contains("base:group_connections"))

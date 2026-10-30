@@ -17,7 +17,7 @@ The following commands are currently implemented in `racshell/`.
 | `adduser` | User | Create RACF user | `--traits`, `--json`, `--debug`, `--all-json`, `--no-color` |
 | `altuser` | User | Alter RACF user | `--traits`, `--json`, `--debug`, `--all-json`, `--no-color` |
 | `deleteuser` | User | Delete RACF user | `--json`, `--debug`, `--all-json`, `--no-color` |
-| `listuser` | User | Display RACF user details | `--groups`, `--tso`, `--kerberos`, `--cics`, `--omvs`, `--security`, `--csdata`, `--json`, `--all-json`, `--debug`, `--no-color` |
+| `listuser` | User | Display RACF user details | `--groups`, `--tso`, `--kerberos`, `--cics`, `--omvs`, `--csdata`, `--json`, `--all-json`, `--debug`, `--no-color` |
 | `searchusers` | User | Search RACF users | `--filter`, `--json`, `--debug`, `--all-json`, `--no-color` |
 | `compareusers` | User | Compare two RACF users | `--json`, `--all-json`, `--debug`, `--no-color` |
 | `resume` | User | Resume a RACF user | `--json`, `--debug`, `--all-json`, `--no-color` |
@@ -118,7 +118,6 @@ Options:
 - `-k, --kerberos` list Kerberos segment
 - `-c, --cics` list CICS segment
 - `-o, --omvs` list OMVS segment
-- `-s, --security` list security-related fields
 - `-x, --csdata` list CSDATA segment
 - `-n, --no-color` disable colored output
 - `-d, --debug` debug SEAR request and response
