@@ -33,6 +33,41 @@ namespace
         return key;
     }
 
+    void append_boolean(std::stringstream &ss, bool value)
+    {
+        racshell::print_colored_text(ss,
+                                     value ? racshell::terminal_color::green : racshell::terminal_color::red,
+                                     value ? "YES" : "NO");
+    }
+
+    void append_json_value(std::stringstream &ss, const nlohmann::json &value)
+    {
+        if (value.is_boolean())
+        {
+            append_boolean(ss, value.get<bool>());
+        }
+        else if (value.is_string())
+        {
+            ss << value.get<std::string>();
+        }
+        else
+        {
+            ss << value.dump();
+        }
+    }
+
+    void append_comparison_value_text(std::stringstream &ss, const nlohmann::json &value)
+    {
+        if (value.is_boolean())
+        {
+            append_boolean(ss, value.get<bool>());
+        }
+        else
+        {
+            ss << racshell::value_to_text(value);
+        }
+    }
+
     void append_segment_label(std::stringstream &ss, std::string_view segment)
     {
         ss << "\n";
@@ -54,14 +89,8 @@ namespace
             for (auto it = csdata.begin(); it != csdata.end(); ++it)
             {
                 ss << "  " << format_security_key(it.key()) << ": ";
-                if (it.value().is_string())
-                {
-                    ss << it.value().get<std::string>() << "\n";
-                }
-                else
-                {
-                    ss << it.value().dump() << "\n";
-                }
+                append_json_value(ss, it.value());
+                ss << "\n";
             }
         }
     }
@@ -116,10 +145,14 @@ namespace
         racshell::reset_color(ss) << ": ";
 
         racshell::colorize(ss, racshell::terminal_color::magenta) << left_groupid;
-        racshell::reset_color(ss) << "='" << racshell::value_to_text(difference.contains("left") ? difference["left"] : nlohmann::json()) << "', ";
+        racshell::reset_color(ss) << "='";
+        append_comparison_value_text(ss, difference.contains("left") ? difference["left"] : nlohmann::json());
+        ss << "', ";
 
         racshell::colorize(ss, racshell::terminal_color::cyan) << right_groupid;
-        racshell::reset_color(ss) << "='" << racshell::value_to_text(difference.contains("right") ? difference["right"] : nlohmann::json()) << "'\n";
+        racshell::reset_color(ss) << "='";
+        append_comparison_value_text(ss, difference.contains("right") ? difference["right"] : nlohmann::json());
+        ss << "'\n";
     }
 
 } // namespace
@@ -136,16 +169,36 @@ std::string TextFormatter::format(const UserData &user)
     ss << "Created: " << user.created_date << "\n";
     ss << "Last access date: " << user.last_access_date << "\n";
     ss << "Last access time: " << user.last_access_time << "\n";
-    ss << "Protected: " << (user.protected_user ? "YES" : "NO") << "\n";
-    ss << "Special: " << (user.special ? "YES" : "NO") << "\n";
-    ss << "Operations: " << (user.operations ? "YES" : "NO") << "\n";
-    ss << "Auditor: " << (user.auditor ? "YES" : "NO") << "\n";
-    ss << "Read-only auditor: " << (user.read_only_auditor ? "YES" : "NO") << "\n";
-    ss << "Revoked: " << (user.revoked ? "YES" : "NO") << "\n";
-    ss << "Password expired: " << (user.password_expired ? "YES" : "NO") << "\n";
-    ss << "Has passphrase: " << (user.has_passphrase ? "YES" : "NO") << "\n";
-    ss << "Has password: " << (user.has_password ? "YES" : "NO") << "\n";
-    ss << "MFA active: " << (user.mfa_active ? "YES" : "NO") << "\n";
+    ss << "Protected: ";
+    append_boolean(ss, user.protected_user);
+    ss << "\n";
+    ss << "Special: ";
+    append_boolean(ss, user.special);
+    ss << "\n";
+    ss << "Operations: ";
+    append_boolean(ss, user.operations);
+    ss << "\n";
+    ss << "Auditor: ";
+    append_boolean(ss, user.auditor);
+    ss << "\n";
+    ss << "Read-only auditor: ";
+    append_boolean(ss, user.read_only_auditor);
+    ss << "\n";
+    ss << "Revoked: ";
+    append_boolean(ss, user.revoked);
+    ss << "\n";
+    ss << "Password expired: ";
+    append_boolean(ss, user.password_expired);
+    ss << "\n";
+    ss << "Has passphrase: ";
+    append_boolean(ss, user.has_passphrase);
+    ss << "\n";
+    ss << "Has password: ";
+    append_boolean(ss, user.has_password);
+    ss << "\n";
+    ss << "MFA active: ";
+    append_boolean(ss, user.mfa_active);
+    ss << "\n";
 
     if (!user.groups.empty())
     {
@@ -162,14 +215,8 @@ std::string TextFormatter::format(const UserData &user)
         for (auto it = user.security.begin(); it != user.security.end(); ++it)
         {
             ss << "  " << format_security_key(it.key()) << ": ";
-            if (it.value().is_string())
-            {
-                ss << it.value().get<std::string>() << "\n";
-            }
-            else
-            {
-                ss << it.value().dump() << "\n";
-            }
+            append_json_value(ss, it.value());
+            ss << "\n";
         }
     }
 
@@ -228,7 +275,9 @@ std::string TextFormatter::format(const GroupData &group)
     ss << "Owner: " << group.owner << "\n";
     ss << "Created: " << group.created_date << "\n";
     ss << "Superior group: " << group.superior_group << "\n";
-    ss << "Universal: " << (group.universal ? "YES" : "NO") << "\n";
+    ss << "Universal: ";
+    append_boolean(ss, group.universal);
+    ss << "\n";
 
     if (!group.installation_data.empty())
     {
@@ -266,7 +315,9 @@ std::string TextFormatter::format(const DatasetData &dataset)
     ss << "Dataset: " << dataset.dataset << "\n";
     ss << "Owner: " << dataset.owner << "\n";
     ss << "UACC: " << dataset.uacc << "\n";
-    ss << "Audited: " << (dataset.audited ? "YES" : "NO") << "\n";
+    ss << "Audited: ";
+    append_boolean(ss, dataset.audited);
+    ss << "\n";
 
     if (dataset.access_count > 0)
     {
