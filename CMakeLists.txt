@@ -14,7 +14,7 @@ endif()
 if(MSVC)
     string(APPEND CMAKE_CXX_FLAGS_RELEASE " /O2")
 else()
-    string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3 -march=arch14")
+    string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3 -march=arch13")
 endif()
 
 add_subdirectory(sear)
