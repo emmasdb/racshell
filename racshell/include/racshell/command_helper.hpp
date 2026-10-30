@@ -282,12 +282,16 @@ namespace racshell
     }
 
     /**
-     * @brief Adds the -n/--no-color flag to a command.
+    * @brief Adds the -n/--no-color/--no-colour flag to a command.
      * @param program Target argument parser.
      */
     inline void add_no_color_argument(argparse::ArgumentParser &program)
     {
-        add_toggle_argument(program, "-n", "--no-color", "disable colored output");
+        program.add_argument("-n", "--no-color", "--no-colour")
+            .help("disable colored output")
+            .default_value(false)
+            .implicit_value(true)
+            .nargs(0);
     }
 
     /**

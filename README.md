@@ -50,6 +50,8 @@ The following commands are currently implemented in `racshell/`.
 | `deletekeyring` | Keyring | Delete a RACF keyring | `--json`, `--debug`, `--all-json`, `--no-color` |
 | `listkeyring` | Keyring | Display keyring and certificate details | `--json`, `--debug`, `--all-json`, `--no-color` |
 
+All commands accept `-n`, `--no-color`, or `--no-colour` to disable colored output.
+
 ## User Commands
 
 User administration and lookup commands.
