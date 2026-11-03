@@ -147,6 +147,13 @@ target_link_libraries(deletekeyring racshell -static)
 add_executable(listkeyring "racshell/src/commands/keyring/listkeyring.cpp")
 target_link_libraries(listkeyring racshell -static)
 
+# Certificate commands
+add_executable(addcertificate "racshell/src/commands/certificates/addcertificate.cpp")
+target_link_libraries(addcertificate racshell -static)
+
+add_executable(deletecertificate "racshell/src/commands/certificates/deletecertificate.cpp")
+target_link_libraries(deletecertificate racshell -static)
+
 add_custom_target(
     racshell_commands
     DEPENDS
@@ -184,4 +191,6 @@ add_custom_target(
     addkeyring
     deletekeyring
     listkeyring
+    addcertificate
+    deletecertificate
 )

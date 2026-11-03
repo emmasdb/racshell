@@ -56,6 +56,8 @@ The following commands are currently implemented in `racshell/`.
 | `addkeyring` | Keyring | Create a RACF keyring | `--json`, `--debug`, `--all-json`, `--no-color` |
 | `deletekeyring` | Keyring | Delete a RACF keyring | `--json`, `--debug`, `--all-json`, `--no-color` |
 | `listkeyring` | Keyring | Display keyring and certificate details | `--json`, `--debug`, `--all-json`, `--no-color` |
+| `addcertificate` | Certificate | Add a certificate to a keyring | `--json`, `--debug`, `--all-json`, `--no-color` |
+| `deletecertificate` | Certificate | Delete a certificate from a keyring | `--json`, `--debug`, `--all-json`, `--no-color` |
 
 All commands accept `-n`, `--no-color`, or `--no-colour` to disable colored output.
 
@@ -628,6 +630,28 @@ Usage:
 `listkeyring <owner> <keyring> [options]`
 
 All keyring commands support `-n, --no-color`, `-d, --debug`, `-j, --json`, and `-a, --all-json`.
+
+## Certificate Commands
+
+Add or delete a certificate in a RACF keyring. Each command requires the certificate owner, keyring name, keyring owner, and certificate label.
+
+### addcertificate
+
+Add a certificate to a keyring.
+
+Usage:
+
+`addcertificate <owner> <keyring> <keyring-owner> <label> <certificate-file> <usage> <status> [options]`
+
+### deletecertificate
+
+Delete a certificate from a keyring.
+
+Usage:
+
+`deletecertificate <owner> <keyring> <keyring-owner> <label> [options]`
+
+Both certificate commands support `-n, --no-color`, `-d, --debug`, `-j, --json`, and `-a, --all-json`.
 
 ## Build pre-reqs
 
