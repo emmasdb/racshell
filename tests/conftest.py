@@ -19,6 +19,11 @@ def generate_racf_groupid() -> str:
     return f"RSHG{secrets.token_hex(2)}".upper()
 
 @pytest.fixture
+def generate_racf_resource_profile_name() -> str:
+    """Generates a valid resource profile name a RACF command can use"""
+    return f"racshell.test.prof{secrets.token_hex(2)}.**".upper()
+
+@pytest.fixture
 def run_shell_command(command: str):
     """Run a shell command using subprocess and capture its output."""
     output = subprocess.run(
