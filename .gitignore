@@ -44,3 +44,9 @@
 CMakeCache.txt
 cmake_install.cmake
 CMakeFiles
+
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd

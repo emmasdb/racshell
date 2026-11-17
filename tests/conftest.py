@@ -1,8 +1,9 @@
 # This is a set of boilerplate helper functions for the test system
 
+import os
 import secrets
 import subprocess
-from zipfile import Path
+from pathlib import Path
 
 import pytest
 
@@ -38,6 +39,21 @@ def _run_command(binary: Path, *args: str):
 @pytest.fixture
 def run_command():
     return _run_command
+
+@pytest.fixture
+def command_binary():
+    """Returns a resolver for compiled RACSHELL command binaries."""
+    default_build_dir = Path(__file__).resolve().parents[1] / "build" / "zos"
+    build_dir = Path(os.environ.get("RACSHELL_BUILD_DIR", default_build_dir))
+
+    def resolve(command: str) -> Path:
+        for filename in (command, f"{command}.exe"):
+            binary = build_dir / filename
+            if binary.is_file():
+                return binary
+        raise FileNotFoundError(f"Could not find '{command}' in build directory {build_dir}")
+
+    return resolve
 
 def _sear_delete_user(userid: str):
     """Internal function"""
@@ -84,7 +100,16 @@ def _sear_delete_dataset_profile(dataset_profile: str):
 
 @pytest.fixture
 def sear_extract_user(userid: str):
-    pass
+    """Extracts a user using SEAR"""
+    result = sear(
+        {
+            "operation": "extract",
+            "admin_type": "user",
+            "userid": userid,
+        },
+    )
+    yield 
+
 
 @pytest.fixture
 def sear_extract_resource_profile(class_name: str, resource_profile: str):
