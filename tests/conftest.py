@@ -1,3 +1,5 @@
+# This is a set of boilerplate helper functions for the test system
+
 import subprocess
 
 import pytest
