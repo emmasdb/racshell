@@ -10,7 +10,7 @@ from sear import sear
 
 @pytest.fixture
 def generate_racf_userid() -> str:
-    """Generates a valid 8 character userid a RACF command can use"""
+    """Generates a valid 8 character long userid a RACF command can use"""
     return f"RSHL{secrets.token_hex(2)}".upper()
 
 @pytest.fixture
