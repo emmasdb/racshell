@@ -1,11 +1,17 @@
 # This is a set of boilerplate helper functions for the test system
 
+import secrets
 import subprocess
 
 import pytest
 
 from sear import sear
 
+
+@pytest.fixture
+def generate_racf_userid() -> str:
+    """Generates a valid 8 character userid a RACF command can use"""
+    return f"RSHL{secrets.token_hex(2)}".upper()
 
 @pytest.fixture
 def run_shell_command(command: str):
