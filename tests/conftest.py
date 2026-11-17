@@ -9,6 +9,20 @@ import pytest
 
 from sear import sear
 
+_USER_NOT_FOUND_RETURN_CODES = {
+    "racf_reason_code": 4,
+    "racf_return_code": 4,
+    "saf_return_code": 4,
+    "sear_return_code": 4,
+}
+
+_USER_SUCCESS_RETURN_CODES = {
+    "racf_reason_code": 0,
+    "racf_return_code": 0,
+    "saf_return_code": 0,
+    "sear_return_code": 0,
+}
+
 
 @pytest.fixture
 def generate_racf_userid() -> str:
@@ -58,13 +72,58 @@ def command_binary():
 def _sear_delete_user(userid: str):
     """Internal function"""
 
-    result = sear(
+    return sear(
         {
             "operation": "delete",
             "admin_type": "user",
             "userid": userid,
         },
+    ).result
+
+
+def _sear_extract_user(userid: str):
+    """Internal function"""
+    return sear(
+        {
+            "operation": "extract",
+            "admin_type": "user",
+            "userid": userid,
+        },
+    ).result
+
+
+@pytest.fixture
+def delete_racf_user(generate_racf_userid):
+    userid = generate_racf_userid
+    existing_user = _sear_extract_user(userid)
+    assert existing_user["return_codes"] == _USER_NOT_FOUND_RETURN_CODES
+
+    yield userid
+
+    current_user = _sear_extract_user(userid)
+    if current_user["return_codes"] != _USER_NOT_FOUND_RETURN_CODES:
+        assert current_user["return_codes"] == _USER_SUCCESS_RETURN_CODES
+        deleted_user = _sear_delete_user(userid)
+        assert deleted_user["return_codes"] == _USER_SUCCESS_RETURN_CODES
+
+    remaining_user = _sear_extract_user(userid)
+    assert remaining_user["return_codes"] == _USER_NOT_FOUND_RETURN_CODES
+
+
+@pytest.fixture
+def created_racf_user(delete_racf_user, command_binary, run_command):
+    userid = delete_racf_user
+    initial_name = "RACSHELL TEST USER"
+    added = run_command(
+        command_binary("adduser"),
+        userid,
+        "--name",
+        initial_name,
+        "--json",
+        "--no-color",
     )
+    assert added.returncode == 0, added.stderr
+    return {"userid": userid, "initial_name": initial_name, "add_result": added}
 
 
 def _sear_delete_resource_profile(class_name: str, resource_profile: str):

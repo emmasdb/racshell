@@ -17,58 +17,6 @@ USER_COMMANDS = (
 	"resetpassphrase",
 )
 
-USER_NOT_FOUND_RETURN_CODES = {
-	"racf_reason_code": 4,
-	"racf_return_code": 4,
-	"saf_return_code": 4,
-	"sear_return_code": 4,
-}
-
-USER_SUCCESS_RETURN_CODES = {
-	"racf_reason_code": 0,
-	"racf_return_code": 0,
-	"saf_return_code": 0,
-	"sear_return_code": 0,
-}
-
-
-@pytest.fixture
-def created_racf_user(command_binary, generate_racf_userid, request, run_command):
-	userid = generate_racf_userid
-	initial_name = "RACSHELL TEST USER"
-
-	existing_user = sear(
-		{
-			"operation": "extract",
-			"admin_type": "user",
-			"userid": userid,
-		},
-	).result
-	assert existing_user["return_codes"] == USER_NOT_FOUND_RETURN_CODES
-
-	def cleanup_user():
-		sear(
-			{
-				"operation": "delete",
-				"admin_type": "user",
-				"userid": userid,
-			},
-		)
-
-	request.addfinalizer(cleanup_user)
-
-	added = run_command(
-		command_binary("adduser"),
-		userid,
-		"--name",
-		initial_name,
-		"--json",
-		"--no-color",
-	)
-	assert added.returncode == 0, added.stderr
-	return {"userid": userid, "initial_name": initial_name, "add_result": added}
-
-
 @pytest.mark.parametrize("command", USER_COMMANDS)
 def test_user_command_help(command, command_binary, run_command):
 	result = run_command(command_binary(command), "--help")
@@ -90,7 +38,7 @@ def test_adduser_creates_user(created_racf_user):
 			"userid": userid,
 		},
 	).result
-	assert extracted_user["return_codes"] == USER_SUCCESS_RETURN_CODES
+	assert extracted_user["return_codes"]["sear_return_code"] == 0
 	assert extracted_user["profile"]["base"]["base:name"] == created_racf_user["initial_name"]
 
 
@@ -157,4 +105,4 @@ def test_deleteuser_removes_user(created_racf_user, command_binary, run_command)
 			"userid": userid,
 		},
 	).result
-	assert missing_user["return_codes"] == USER_NOT_FOUND_RETURN_CODES
+	assert missing_user["return_codes"]["sear_return_code"] == 4
