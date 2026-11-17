@@ -11,7 +11,12 @@ from sear import sear
 @pytest.fixture
 def generate_racf_userid() -> str:
     """Generates a valid 8 character long userid a RACF command can use"""
-    return f"RSHL{secrets.token_hex(2)}".upper()
+    return f"RSHU{secrets.token_hex(2)}".upper()
+
+@pytest.fixture
+def generate_racf_groupid() -> str:
+    """Generates a valid 8 character long groupid a RACF command can use"""
+    return f"RSHG{secrets.token_hex(2)}".upper()
 
 @pytest.fixture
 def run_shell_command(command: str):
