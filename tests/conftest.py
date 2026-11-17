@@ -24,19 +24,20 @@ def generate_racf_resource_profile_name() -> str:
     """Generates a valid resource profile name a RACF command can use"""
     return f"racshell.test.prof{secrets.token_hex(2)}.**".upper()
 
+def _run_command(binary: Path, *args: str):
+    """Internal function"""
+    return subprocess.run(
+        [str(binary), *args],
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=30,
+    )
+
+
 @pytest.fixture
 def run_command():
-    """Run a binary with the given arguments and return the completed process."""
-    def run(binary: Path, *args: str) -> subprocess.CompletedProcess[str]:
-        return subprocess.run(
-            [str(binary), *args],
-            text=True,
-            capture_output=True,
-            check=False,
-            timeout=30,
-        )
-
-    return run
+    return _run_command
 
 def _sear_delete_user(userid: str):
     """Internal function"""
