@@ -2,6 +2,7 @@
 
 import secrets
 import subprocess
+from zipfile import Path
 
 import pytest
 
@@ -24,16 +25,18 @@ def generate_racf_resource_profile_name() -> str:
     return f"racshell.test.prof{secrets.token_hex(2)}.**".upper()
 
 @pytest.fixture
-def run_shell_command(command: str):
-    """Run a shell command using subprocess and capture its output."""
-    output = subprocess.run(
-        command, 
-        text=False, 
-        shell=True, 
-        check=True, 
-        capture_output=True,
+def run_command():
+    """Run a binary with the given arguments and return the completed process."""
+    def run(binary: Path, *args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [str(binary), *args],
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=30,
         )
-    return output
+
+    return run
 
 def _sear_delete_user(userid: str):
     """Internal function"""
