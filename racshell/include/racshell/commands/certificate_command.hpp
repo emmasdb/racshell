@@ -3,14 +3,123 @@
 #include <argparse.hpp>
 #include <nlohmann/json.hpp>
 
+#include <array>
 #include <iostream>
 #include <string>
+#include <string_view>
 
 #include "include/racshell/command_helper.hpp"
 #include "sear/sear.h"
 
 namespace racshell
 {
+
+    struct CertificateReturnCodeDescription
+    {
+        int saf_rc;
+        int racf_rc;
+        int reason;
+        std::string_view description;
+    };
+
+    inline constexpr std::array<CertificateReturnCodeDescription, 10> certificate_common_return_codes = {{
+        {8, 8, 4, "R_datalib parameter list error."},
+        {8, 8, 8, "Not authorized to use the requested R_datalib service."},
+        {8, 8, 12, "An internal error caused recovery to get control."},
+        {8, 8, 16, "Unable to establish a recovery environment."},
+        {8, 8, 20, "The requested function code is not defined."},
+        {8, 8, 24, "The parameter-list version is not supported."},
+        {8, 8, 28, "The keyring name or RACF user ID is invalid."},
+        {8, 8, 72, "The caller is not in task mode."},
+        {8, 8, 92, "An internal R_datalib error occurred."},
+        {8, 8, 96, "The link-library concatenation contains a non-APF-authorized library."},
+    }};
+
+    inline constexpr std::array<CertificateReturnCodeDescription, 18> certificate_data_put_return_codes = {{
+        {4, 4, 0, "The certificate was added with NOTRUST status."},
+        {4, 4, 4, "The certificate was added; refresh the DIGTCERT class to reflect the update."},
+        {4, 4, 8, "The certificate already exists in RACF; the requested label was ignored."},
+        {4, 4, 12, "The certificate already exists in RACF; the label was ignored and its status is NOTRUST."},
+        {4, 4, 16, "The certificate already exists in RACF; the label was ignored and DIGTCERT needs refresh."},
+        {8, 8, 32, "Invalid certificate length or pointer, or the label area is too small."},
+        {8, 8, 36, "Unable to decode the certificate."},
+        {8, 8, 40, "The private key is not DER-encoded or is not a supported key label format."},
+        {8, 8, 44, "The private key encoding, algorithm, or key size is not supported."},
+        {8, 8, 48, "The specified private key does not match the existing private key."},
+        {8, 8, 52, "The specified key label could not be found."},
+        {8, 8, 56, "ICSF returned an error while looking up the key label."},
+        {8, 8, 60, "Not authorized to access the ICSF key entry."},
+        {8, 8, 64, "The specified certificate label already exists in RACF."},
+        {8, 8, 68, "The certificate owner user ID does not exist in RACF."},
+        {8, 8, 76, "The certificate cannot be installed."},
+        {8, 8, 80, "The certificate exists under a different user ID."},
+        {8, 8, 84, "The keyring profile could not be found."},
+    }};
+
+    inline constexpr std::array<CertificateReturnCodeDescription, 10> certificate_data_remove_return_codes = {{
+        {4, 4, 0, "The certificate was removed from the keyring but remains in RACF because it is connected to other keyrings."},
+        {4, 4, 4, "The certificate was removed from the keyring but could not be deleted from RACF due to an unexpected error."},
+        {4, 4, 8, "The certificate was removed from the keyring but could not be deleted from RACF due to insufficient authority."},
+        {4, 4, 12, "The certificate was removed; refresh the DIGTCERT class to reflect the update."},
+        {4, 4, 16, "The certificate was removed from the keyring but remains in RACF because it was used to generate a request."},
+        {8, 8, 32, "Invalid label length, label pointer, or certificate owner user ID."},
+        {8, 8, 36, "Cannot find a certificate with the specified label and owner ID."},
+        {8, 8, 40, "The keyring profile could not be found."},
+        {8, 8, 44, "Cannot delete the certificate from RACF because it is connected to other keyrings."},
+        {8, 8, 48, "Cannot delete the certificate because it was used to generate a request or its private key is unavailable."},
+    }};
+
+    template <std::size_t N>
+    inline std::string_view find_certificate_return_code_description(
+        const std::array<CertificateReturnCodeDescription, N> &table,
+        const SearReturnCodes &codes)
+    {
+        for (const auto &entry : table)
+        {
+            if (entry.saf_rc == codes.saf_rc && entry.racf_rc == codes.racf_rc &&
+                entry.reason == codes.racf_reason)
+            {
+                return entry.description;
+            }
+        }
+        return {};
+    }
+
+    inline std::string_view certificate_return_code_description(const SearReturnCodes &codes,
+                                                                bool add_certificate)
+    {
+        const std::string_view operation_description = add_certificate
+            ? find_certificate_return_code_description(certificate_data_put_return_codes, codes)
+            : find_certificate_return_code_description(certificate_data_remove_return_codes, codes);
+        if (!operation_description.empty())
+        {
+            return operation_description;
+        }
+        return find_certificate_return_code_description(certificate_common_return_codes, codes);
+    }
+
+    inline void print_certificate_return_code_description(const nlohmann::json &response,
+                                                          bool add_certificate,
+                                                          std::ostream &output,
+                                                          bool warning)
+    {
+        const SearReturnCodes codes = extract_sear_return_codes(response);
+        const std::string_view description = certificate_return_code_description(codes, add_certificate);
+        if (description.empty())
+        {
+            return;
+        }
+
+        if (warning)
+        {
+            print_colored_text(output, terminal_color::yellow, "RACF Warning") << ": ";
+        }
+        else
+        {
+            output << "  RACF detail: ";
+        }
+        output << description << "\n";
+    }
 
     struct CertificateCommandSpec
     {
@@ -138,7 +247,14 @@ namespace racshell
         {
             print_error(std::cerr, op_info.error_message);
             print_sear_errors(op_info.response, std::cerr);
+            print_certificate_return_code_description(op_info.response, spec.add_certificate, std::cerr, false);
             return 1;
+        }
+
+        const SearReturnCodes return_codes = extract_sear_return_codes(op_info.response);
+        if (return_codes.saf_rc == 4 || return_codes.racf_rc == 4)
+        {
+            print_certificate_return_code_description(op_info.response, spec.add_certificate, std::cerr, true);
         }
 
         if (json_output)
