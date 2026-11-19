@@ -234,6 +234,10 @@ namespace racshell
         }
 
         const std::string request_json = request.dump();
+        if (debug)
+        {
+            std::cerr << "SEAR request JSON:\n" << request_json << "\n";
+        }
         sear_result_t *result = sear(request_json.c_str(), request_json.length(), debug);
 
         if (all_json)
