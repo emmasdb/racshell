@@ -14,15 +14,24 @@ namespace
 
     void print_title(const std::string &title, std::size_t indent = 0)
     {
-        std::cout << std::string(indent, ' ');
-        racshell::print_colored_text(std::cout, racshell::terminal_color::cyan, title) << "\n";
+        std::cout << std::string(indent, ' ') << title << "\n";
     }
 
     void print_field(const std::string &label, const nlohmann::json &value, std::size_t indent = 2)
     {
         std::cout << std::string(indent, ' ');
-        racshell::print_colored_text(std::cout, racshell::terminal_color::cyan, label);
-        std::cout << ": " << display_value(value) << "\n";
+        std::cout << label << ": ";
+        if (value.is_boolean())
+        {
+            racshell::print_colored_text(std::cout,
+                                         value.get<bool>() ? racshell::terminal_color::green : racshell::terminal_color::red,
+                                         value.get<bool>() ? "YES" : "NO");
+        }
+        else
+        {
+            racshell::print_colored_text(std::cout, racshell::terminal_color::blue, display_value(value));
+        }
+        std::cout << "\n";
     }
 
     void print_certificate_field(const nlohmann::json &certificate,
