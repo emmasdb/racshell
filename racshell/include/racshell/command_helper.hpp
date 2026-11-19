@@ -365,14 +365,16 @@ namespace racshell
     }
 
     /**
-     * @brief Validates that the SEAR/RACF return codes indicate success.
+    * @brief Validates that the SEAR/RACF return codes indicate success or warning.
      * @param codes Return-code bundle.
      * @param error_message Populated failure details when any code indicates error.
      * @return True when the operation is successful.
      */
     inline bool validate_sear_return_codes(const SearReturnCodes &codes, std::string &error_message)
     {
-        if (codes.sear_rc == 0 && codes.saf_rc == 0 && codes.racf_rc == 0)
+        const bool saf_success_or_warning = codes.saf_rc == 0 || codes.saf_rc == 4;
+        const bool racf_success_or_warning = codes.racf_rc == 0 || codes.racf_rc == 4;
+        if (codes.sear_rc == 0 && saf_success_or_warning && racf_success_or_warning)
         {
             return true;
         }

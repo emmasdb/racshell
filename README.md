@@ -627,7 +627,7 @@ Extract keyring details, including associated certificates.
 
 Usage:
 
-`listkeyring <owner> <keyring> [options]`
+`listkeyring --owner <userid> --keyring <name> [options]`
 
 All keyring commands support `-n, --no-color`, `-d, --debug`, `-j, --json`, and `-a, --all-json`.
 
@@ -641,7 +641,7 @@ Add a certificate to a keyring.
 
 Usage:
 
-`addcertificate <owner> <keyring> <keyring-owner> <label> <certificate-file> <usage> <status> [options]`
+`addcertificate --owner <userid> --keyring <name> --keyring-owner <userid> --label <label> --certificate-file <path> --usage <usage> --status <status> [options]`
 
 ### deletecertificate
 
@@ -649,9 +649,9 @@ Delete a certificate from a keyring.
 
 Usage:
 
-`deletecertificate <owner> <keyring> <keyring-owner> <label> [options]`
+`deletecertificate --owner <userid> --keyring <name> --keyring-owner <userid> --label <label> [options]`
 
-Both certificate commands support `-n, --no-color`, `-d, --debug`, `-j, --json`, and `-a, --all-json`.
+Certificate commands also provide `-o` for `--owner`, `-k` for `--keyring`, and `-l` for `--label`. `addcertificate` provides `-f`, `-u`, and `-s` for the certificate file, usage, and status options. Both commands support `-n, --no-color`, `-d, --debug`, `-j, --json`, and `-a, --all-json`.
 
 ## Build pre-reqs
 

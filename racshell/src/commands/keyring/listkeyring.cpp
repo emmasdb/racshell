@@ -12,39 +12,125 @@ namespace
         return value.is_string() ? value.get<std::string>() : value.dump();
     }
 
-    void print_readable_value(const nlohmann::json &value, std::size_t indent)
+    void print_title(const std::string &title, std::size_t indent = 0)
     {
-        const std::string padding(indent, ' ');
-        if (value.is_object())
+        std::cout << std::string(indent, ' ');
+        racshell::print_colored_text(std::cout, racshell::terminal_color::cyan, title) << "\n";
+    }
+
+    void print_field(const std::string &label, const nlohmann::json &value, std::size_t indent = 2)
+    {
+        std::cout << std::string(indent, ' ');
+        racshell::print_colored_text(std::cout, racshell::terminal_color::cyan, label);
+        std::cout << ": " << display_value(value) << "\n";
+    }
+
+    void print_certificate_field(const nlohmann::json &certificate,
+                                 const char *key,
+                                 const char *label)
+    {
+        const auto value = certificate.find(key);
+        if (value != certificate.end() && !value->is_structured() && !value->is_null())
         {
-            for (auto it = value.begin(); it != value.end(); ++it)
+            print_field(label, *value, 4);
+        }
+    }
+
+    void print_certificate(const nlohmann::json &certificate, std::size_t index)
+    {
+        const std::string label = certificate.value("label", std::string());
+        std::string title = "Certificate " + std::to_string(index + 1);
+        if (!label.empty())
+        {
+            title += " - " + label;
+        }
+        print_title(title, 2);
+
+        print_certificate_field(certificate, "owner", "Owner");
+        print_certificate_field(certificate, "DN", "Subject");
+        print_certificate_field(certificate, "issuer", "Issuer");
+        print_certificate_field(certificate, "usage", "Usage");
+        print_certificate_field(certificate, "status", "Status");
+        print_certificate_field(certificate, "default", "Default");
+        print_certificate_field(certificate, "privateKey", "Private key");
+        print_certificate_field(certificate, "keySize", "Key size");
+        print_certificate_field(certificate, "version", "Version");
+        print_certificate_field(certificate, "serialNumber", "Serial number");
+        print_certificate_field(certificate, "notBefore", "Valid from");
+        print_certificate_field(certificate, "notAfter", "Valid until");
+
+        const auto fingerprints = certificate.find("fingerprints");
+        if (fingerprints != certificate.end() && fingerprints->is_array() && !fingerprints->empty())
+        {
+            print_title("Fingerprints", 4);
+            for (const auto &fingerprint : *fingerprints)
             {
-                std::cout << padding << it.key();
-                if (it.value().is_structured())
+                if (fingerprint.is_object())
                 {
-                    std::cout << ":\n";
-                    print_readable_value(it.value(), indent + 2);
-                }
-                else
-                {
-                    std::cout << ": " << display_value(it.value()) << "\n";
+                    for (auto it = fingerprint.begin(); it != fingerprint.end(); ++it)
+                    {
+                        print_field(it.key(), it.value(), 6);
+                    }
                 }
             }
         }
-        else if (value.is_array())
+
+        const auto extensions = certificate.find("extensions");
+        if (extensions != certificate.end() && extensions->is_array() && !extensions->empty())
         {
-            for (const auto &item : value)
+            print_title("Extensions", 4);
+            for (const auto &extension : *extensions)
             {
-                std::cout << padding << "-";
-                if (item.is_structured())
+                if (!extension.is_object())
                 {
-                    std::cout << "\n";
-                    print_readable_value(item, indent + 2);
+                    continue;
                 }
-                else
+
+                std::string extension_title = extension.value("name", std::string("Extension"));
+                if (extension.value("critical", std::string("no")) == "yes")
                 {
-                    std::cout << " " << display_value(item) << "\n";
+                    extension_title += " (critical)";
                 }
+                print_title(extension_title, 6);
+
+                const auto value = extension.find("value");
+                if (value != extension.end() && !value->is_structured() && !value->is_null())
+                {
+                    print_field("Value", *value, 8);
+                }
+
+                const auto usages = extension.find("usages");
+                if (usages != extension.end() && usages->is_array())
+                {
+                    for (const auto &usage : *usages)
+                    {
+                        print_field("Usage", usage, 8);
+                    }
+                }
+
+                const auto altnames = extension.find("altnames");
+                if (altnames != extension.end() && altnames->is_array())
+                {
+                    for (const auto &altname : *altnames)
+                    {
+                        if (altname.is_object())
+                        {
+                            const std::string type = altname.value("type", std::string("Name"));
+                            const std::string name = altname.value("name", std::string());
+                            print_field(type, name, 8);
+                        }
+                    }
+                }
+            }
+        }
+
+        const auto signature = certificate.find("signature");
+        if (signature != certificate.end() && signature->is_object())
+        {
+            const auto algorithm = signature->find("algorithm");
+            if (algorithm != signature->end())
+            {
+                print_field("Signature", *algorithm, 4);
             }
         }
     }
@@ -54,9 +140,11 @@ int main(int argc, char *argv[])
 {
     argparse::ArgumentParser program("listkeyring");
 
-    program.add_argument("owner")
+    program.add_argument("-o", "--owner")
+        .required()
         .help("owner userid");
-    program.add_argument("keyring")
+    program.add_argument("-k", "--keyring")
+        .required()
         .help("keyring name");
 
     racshell::add_no_color_argument(program);
@@ -137,21 +225,21 @@ int main(int argc, char *argv[])
     }
     else
     {
-        std::cout << "Owner: " << owner << "\n";
-        std::cout << "Keyring: " << keyring << "\n";
+        print_title("Keyring");
+        print_field("Owner", owner);
+        print_field("Name", keyring);
 
         const auto certificates = keyring_data->find("certificates");
         if (certificates == keyring_data->end() || !certificates->is_array() || certificates->empty())
         {
-            std::cout << "Certificates: none\n";
+            print_title("Certificates: none");
         }
         else
         {
-            std::cout << "Certificates: " << certificates->size() << "\n";
+            print_title("Certificates (" + std::to_string(certificates->size()) + ")");
             for (std::size_t index = 0; index < certificates->size(); ++index)
             {
-                std::cout << "  Certificate " << index + 1 << ":\n";
-                print_readable_value((*certificates)[index], 4);
+                print_certificate((*certificates)[index], index);
             }
         }
     }

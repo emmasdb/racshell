@@ -24,22 +24,29 @@ namespace racshell
     {
         argparse::ArgumentParser program(spec.command_name);
 
-        program.add_argument("owner")
+        program.add_argument("-o", "--owner")
+            .required()
             .help("certificate owner userid");
-        program.add_argument("keyring")
+        program.add_argument("-k", "--keyring")
+            .required()
             .help("keyring name");
-        program.add_argument("keyring-owner")
+        program.add_argument("--keyring-owner")
+            .required()
             .help("keyring owner userid");
-        program.add_argument("label")
+        program.add_argument("-l", "--label")
+            .required()
             .help("certificate label");
 
         if (spec.add_certificate)
         {
-            program.add_argument("certificate-file")
+            program.add_argument("-f", "--certificate-file")
+                .required()
                 .help("certificate file path");
-            program.add_argument("usage")
+            program.add_argument("-u", "--usage")
+                .required()
                 .help("certificate usage");
-            program.add_argument("status")
+            program.add_argument("-s", "--status")
+                .required()
                 .help("certificate status");
         }
 
