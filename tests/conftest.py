@@ -23,6 +23,20 @@ _USER_SUCCESS_RETURN_CODES = {
     "sear_return_code": 0,
 }
 
+_GROUP_NOT_FOUND_RETURN_CODES = {
+    "racf_reason_code": 4,
+    "racf_return_code": 4,
+    "saf_return_code": 4,
+    "sear_return_code": 4,
+}
+
+_GROUP_SUCCESS_RETURN_CODES = {
+    "racf_reason_code": 0,
+    "racf_return_code": 0,
+    "saf_return_code": 0,
+    "sear_return_code": 0,
+}
+
 
 @pytest.fixture
 def generate_racf_userid() -> str:
@@ -126,6 +140,48 @@ def created_racf_user(delete_racf_user, command_binary, run_command):
     return {"userid": userid, "initial_name": initial_name, "add_result": added}
 
 
+def _sear_extract_group(groupid: str):
+    """Internal function"""
+    return sear(
+        {
+            "operation": "extract",
+            "admin_type": "group",
+            "group": groupid,
+        },
+    ).result
+
+
+@pytest.fixture
+def delete_racf_group(generate_racf_groupid):
+    groupid = generate_racf_groupid
+    existing_group = _sear_extract_group(groupid)
+    assert existing_group["return_codes"] == _GROUP_NOT_FOUND_RETURN_CODES
+
+    yield groupid
+
+    current_group = _sear_extract_group(groupid)
+    if current_group["return_codes"] != _GROUP_NOT_FOUND_RETURN_CODES:
+        assert current_group["return_codes"] == _GROUP_SUCCESS_RETURN_CODES
+        deleted_group = _sear_delete_group(groupid)
+        assert deleted_group["return_codes"] == _GROUP_SUCCESS_RETURN_CODES
+
+    remaining_group = _sear_extract_group(groupid)
+    assert remaining_group["return_codes"] == _GROUP_NOT_FOUND_RETURN_CODES
+
+
+@pytest.fixture
+def created_racf_group(delete_racf_group, command_binary, run_command):
+    groupid = delete_racf_group
+    added = run_command(
+        command_binary("addgroup"),
+        groupid,
+        "--json",
+        "--no-color",
+    )
+    assert added.returncode == 0, added.stderr
+    return {"groupid": groupid, "add_result": added}
+
+
 def _sear_delete_resource_profile(class_name: str, resource_profile: str):
     """Internal function"""
     result = sear(
@@ -139,13 +195,13 @@ def _sear_delete_resource_profile(class_name: str, resource_profile: str):
 
 def _sear_delete_group(groupid: str):
     """Internal function"""
-    result = sear(
+    return sear(
         {
             "operation": "delete",
             "admin_type": "group",
             "group": groupid,
         },
-    )
+    ).result
 
 def _sear_delete_dataset_profile(dataset_profile: str):
     """Internal function"""
